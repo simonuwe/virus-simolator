@@ -53,7 +53,7 @@ Configure the personal behaviour of the individuals
 
 | Field              | Description |
 | ------------------ | ----------- |
-| Moving distance    |
-| Daily contacts     |
-| Infection rate (%) |
+| Moving distance    | The distance individuals move to left/right up/down |
+| Daily contacts     | The number of daly contacts |
+| Infection rate (%) | The percentage of individuals infected by a contact to another infected individual. |
 ```
