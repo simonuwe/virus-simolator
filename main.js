@@ -12,7 +12,7 @@ class Disease{
     this.infectionrate     = infectionrate;
     this.nosymptomrate     = nosymptomrate;
     this.heavysymptomrate  = heavysymptomrate;
-    console.dir(this);
+//    console.dir(this);
   }
 }
 
@@ -214,45 +214,51 @@ class Country{
   }
 }
 
-function generate(options){
-  console.dir(options);
-  let disease = new Disease(options.waitdays, options.infectiousdays, options.symptomdays, options.infectionrate/100.0, options.nosymptoms/100.0, options.heavysymptoms/100.0);
-  let country = new Country(options.xsize, options.ysize, options.period, options.resistant/100.0, options.distance, options.contacts);
+let disease = null;
+let country = null;
 
-  let today  = 0;
+class Simulation{
+  constructor(options){
+    this.options = options;
+    this.today   = 1;
+    this.period  = options.period;
+    this.infected =[];
+    this.disease = new Disease(options.waitdays, options.infectiousdays, options.symptomdays, options.infectionrate/100.0, options.nosymptoms/100.0, options.heavysymptoms/100.0);
+    this.country = new Country(options.xsize, options.ysize, options.period, options.resistant/100.0, options.distance, options.contacts);
 
-  let infected =[];
-  for(let i=0; i<options.initiallyinfected;){
-    let x = Math.random() * options.xsize |0;
-    let y = Math.random() * options.ysize |0;
-    let person = country.getPerson(x, y);
-    person.incContacts();
-    if(person.canBeInfected()){
-      person.setInfected(today, 0, disease);
-      country.setPerson(x, y, person);
-      infected.push(person);
-      i++;
-    }
   }
 
-  country.setInfected(today, infected);
-  while(today<options.period){
-    today ++;
-    let infections = country.calcInfections(today, disease);
+
+  init(){
+    for(let i=0; i<this.options.initiallyinfected;){
+      let x = Math.random() * this.options.xsize |0;
+      let y = Math.random() * this.options.ysize |0;
+      let person = this.country.getPerson(x, y);
+      person.incContacts();
+      if(person.canBeInfected()){
+        person.setInfected(this.today, 0, this.disease);
+        this.country.setPerson(x, y, person);
+        this.infected.push(person);
+        i++;
+      }
+    }
+  
+    this.country.setInfected(this.today, this.infected);
+  }
+
+  getData(){
+    if(this.today<=this.options.period){
+      return({country: this.country,
+              status: this.country.status,
+              day: this.today});
+    } else {
+      return(null);
+    }    
+  }
+
+  nextDay(){
+    this.today ++;
+    let infections = this.country.calcInfections(this.today, this.disease);
     if(gDebug) {console.dir(infections);}
   }
-
-  if(gDebug) {
-    console.log(country.dump());
-  }
-  
-  let data = [];
-  console.log('day', 'infected', 'infectious', 'heavysymptom', 'symptom', 'cured');
-  for(let i=0; i<=today; i++){
-    let status = country.getStatus(i);
-    data.push(status);
-    console.log(i, status.infected, status.infectious, status.heavysymptom, status.symptom, status.cured);
-  }
-
-  return(data);
 }

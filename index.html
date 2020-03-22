@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-  <meta charset="UTF-8">
+<meta charset="UTF-8">
 
 <header>
   <script src="Chart.bundle.js"></script>
@@ -10,180 +10,352 @@
   <script src="main.js"></script>
   <link rel="stylesheet" type="text/css" href="jquery-ui.min.css">
   <style>
-@keyframes spinner {
-  to {transform: rotate(360deg);}
-}
- 
-.spinner:before {
-  content: '';
-  box-sizing: border-box;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 20px;
-  height: 20px;
-  margin-top: -10px;
-  margin-left: -10px;
-  border-radius: 50%;
-  border: 2px solid #ccc;
-  border-top-color: #000;
-  animation: spinner .6s linear infinite;
-}
+    .ui-spinner {
+      width: 5em;
+    }
+
+    tr.chapter {
+      font-weight: bold;
+      background-color: lightgrey;
+    }
+
+    @keyframes spinner {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .spinner:before {
+      content: '';
+      box-sizing: border-box;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      margin-top: -10px;
+      margin-left: -10px;
+      border-radius: 50%;
+      border: 2px solid #ccc;
+      border-top-color: #000;
+      animation: spinner .6s linear infinite;
+    }
   </style>
 </header>
-  <body>
+
+<body>
+  <h1>Disease/Virus simulator</h1>
+  <div style="vertical-align:top; display: inline-block;">
     <div>
       <table>
-       <tr>
-        <td><label for="xsize">X-Size</label></td><td><input id="xsize" value="100"></input></td>
-        <td><label for="ysize">Y-Size</label></td><td><input id="ysize" value="100"></input></td>
-        <td><label for="period">Simulation period</label></td><td><input id="period" value="30"></input></td>
-        <td><label for="initiallyinfected">Initially infected</label></td><td><input id="initiallyinfected" value="1"></input></td>
-       </tr>
-       <tr>
-        <td><label for="resistant">Resistant (%)</label></td><td><input id="resistant" value="0"></input></td>
-        <td><label for="nosymptoms">No symptoms (%)</label></td><td><input id="nosymptoms" value="0"></input></td>
-        <td><label for="heavysymptoms">Heavy symptoms (%)</label></td><td><input id="heavysymptoms" value="0"></input></td>
-       </tr>
-       <tr>
-        <td><label for="waitdays">Days not infectious</label></td><td><input id="waitdays" value="1"></input></td>
-        <td><label for="infectiousdays">Days infectious</label></td><td><input id="infectiousdays" value="10"></input></td>
-        <td><label for="symptomdays">Days symptoms</label></td><td><input id="symptomdays" value="10"></input></td>
-       </tr>
-       <tr>
-        <td><label for="distance">Moving distance</label></td><td><input id="distance" value="100"></input></td>
-        <td><label for="contacts">Daily contacts</label></td><td><input id="contacts" value="100"></input></td>
-        <td><label for="infectionrate">Infection rate (%)</label></td><td><input id="infectionrate" value="1"></input></td>
-       </tr>
+        <tr class="chapter">
+          <td>Global setup</td>
+          <td />
+          <td />
+          <td />
+          <td />
+          <td />
+          <td />
+          <td />
+          <td />
+        </tr>
+        <tr>
+          <td />
+          <td><label for="xsize">X-Size</label></td>
+          <td><input id="xsize" value="100"></input></td>
+          <td><label for="ysize">Y-Size</label></td>
+          <td><input id="ysize" value="100"></input></td>
+          <td><label for="period">Simulation period (days)</label></td>
+          <td><input id="period" value="30"></input></td>
+          <td><label for="initiallyinfected">Initially infected</label></td>
+          <td><input id="initiallyinfected" value="1"></input></td>
+        </tr>
+        <tr class="chapter">
+          <td>Disease setup</td>
+          <td />
+          <td />
+          <td />
+          <td />
+          <td />
+          <td />
+          <td />
+          <td />
+        </tr>
+        <tr>
+          <td />
+          <td><label for="resistant">Resistant (%)</label></td>
+          <td><input id="resistant" value="0"></input></td>
+          <td><label for="nosymptoms">No symptoms (%)</label></td>
+          <td><input id="nosymptoms" value="0"></input></td>
+          <td><label for="heavysymptoms">Heavy symptoms (%)</label></td>
+          <td><input id="heavysymptoms" value="0"></input></td>
+        </tr>
+        <tr>
+          <td />
+          <td><label for="waitdays">Days not infectious</label></td>
+          <td><input id="waitdays" value="1"></input></td>
+          <td><label for="infectiousdays">Days infectious</label></td>
+          <td><input id="infectiousdays" value="10"></input></td>
+          <td><label for="symptomdays">Days symptoms</label></td>
+          <td><input id="symptomdays" value="10"></input></td>
+        </tr>
+        <tr class="chapter">
+          <td>Personal behaviour</td>
+          <td />
+          <td />
+          <td />
+          <td />
+          <td />
+          <td />
+          <td />
+          <td />
+        </tr>
+        <tr>
+          <td />
+          <td><label for="distance">Moving distance</label></td>
+          <td><input id="distance" value="30"></input></td>
+          <td><label for="contacts">Daily contacts</label></td>
+          <td><input id="contacts" value="30"></input></td>
+          <td><label for="infectionrate">Infection rate (%)</label></td>
+          <td><input id="infectionrate" value="1"></input></td>
+        </tr>
       </table>
-      </div>
-      <button id="calc">Calc</button>
-      <div id="calculating"></div>
     </div>
-    <div height="75%">
-      <canvas id="mychart" width="1500" height="600" style="border:1px solid #d3d3d3;"></canvas>
+    <button id="calc">Calc</button>
+    <div id="calculating"></div>
+    <div>
+      <canvas id="mychart" width="800" height="600" style="border:1px solid #d3d3d3;"></canvas>
     </div>
-    <script>
-      $(function() {
-        let myChart = null;
-        $("#xsize").spinner({ min:  100, max:  10000, step: 100 });
-        $("#ysize").spinner({ min:  100, max:  10000, step: 100 });
-        $("#period").spinner({ min:  10, max:  360, step: 10 });
-        $("#initiallyinfected").spinner({ min:  1, max:  300, step: 1 });
-        $("#resistant").spinner({ min:  0, max:  100, step: 1 });
-        $("#distance").spinner({ min:  0, max:  1000, step: 1 });
-        $("#contacts").spinner({ min:  0, max:  1000, step: 1 });
-        $("#infectionrate").spinner({ min:  0, max:  1000, step: 1 });
-        $("#waitdays").spinner({ min:  0, max:  1000, step: 1 });
-        $("#infectiousdays").spinner({ min:  1, max:  100, step: 1 });
-        $("#symptomdays").spinner({ min:  0, max:  100, step: 1 });
-        $("#heavysymptoms").spinner({ min:  0, max:  100, step: 1 });
-        $("#nosymptoms").spinner({ min:  0, max:  100, step: 1 });
-
-        $("#calc").button();
-        $("#calc").click( function( event ) {
-          $("#calc").button( "disable" );
-          $('#calculating').addClass('spinner');
-          let options = {
-            xsize:             parseInt($('#xsize').val()),
-            ysize:             parseInt($('#ysize').val()),
-            period:            parseInt($('#period').val()),
-            initiallyinfected: parseInt($('#initiallyinfected').val()),
-            resistant:         parseInt($('#resistant').val()),
-            distance:          parseInt($('#distance').val()),
-            contacts:          parseInt($('#contacts').val()),
-            infectionrate:     parseInt($('#infectionrate').val()),
-            waitdays:          parseInt($('#waitdays').val()),
-            infectiousdays:    parseInt($('#infectiousdays').val()),
-            symptomdays:       parseInt($('#symptomdays').val()),
-            heavysymptoms:     parseInt($('#heavysymptoms').val()),
-            nosymptoms:        parseInt($('#nosymptoms').val()),
-          }
+  </div>
+  <div id="heatmap"
+    style="vertical-align:top; display: inline-block; width: 800px; height: 800px; border:1px solid #d3d3d3;"></div>
 
 
-          setTimeout(function(){
-          let data = generate(options);
-          console.dir(data);
-          let chartOptions = {
-            responsive: true,
-            maintainAspectRatio: false,
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: [{
-                  label: 'newly infected',
-                  yAxisID: 'A',
-                  backgroundColor: "rgba(255,0,0,0.5)",
-                  data: []
-                }, {
-                  label: 'is infectious',
-                  yAxisID: 'A',
-                  backgroundColor: "rgba(255,255,0,0.5)",
-                  data: []
-                }, {
-                  label: 'has symptom',
-                  yAxisID: 'A',
-                  backgroundColor: "rgba(128,128,128,0.5)",
-                  data: []
-                }, {
-                  label: 'has heavy symptom',
-                  yAxisID: 'A',
-                  backgroundColor: "rgba(128,128,128,0.8)",
-                  data: []
-                }, {
-                  label: 'is cured',
-                  yAxisID: 'A',
-                  backgroundColor: "rgba(0,255,0,0.5)",
-                  data: []
-                }, {
-                  label: 'total (%)',
-                  yAxisID: 'B',
-                  backgroundColor: "rgba(255,255,255,0.0)",
-                  data: []
-                }]
-            },
-            options: {
-                scales: {
-                    yAxes: [{
-                        id: 'A',
-                        position: 'left',
-                        ticks: {
-                            beginAtZero: true
-                        }
-                      }, {
-                        id: 'B',
-                        position: 'right',
-                        ticks: {
-                            beginAtZero: true
-                        }
-                    }]
+  <script>
+    $(function () {
+
+      // draw the total overview diagram
+      drawTotal = function (options, status) {
+        //        console.dir(status);
+        let chartOptions = {
+          responsive: true,
+          maintainAspectRatio: false,
+          type: 'line',
+          data: {
+            labels: [],
+            datasets: [{
+              label: 'newly infected',
+              yAxisID: 'A',
+              backgroundColor: "rgba(255,0,0,0.5)",
+              data: []
+            }, {
+              label: 'is infectious',
+              yAxisID: 'A',
+              backgroundColor: "rgba(255,255,0,0.5)",
+              data: []
+            }, {
+              label: 'has symptom',
+              yAxisID: 'A',
+              backgroundColor: "rgba(128,128,128,0.5)",
+              data: []
+            }, {
+              label: 'has heavy symptom',
+              yAxisID: 'A',
+              backgroundColor: "rgba(128,128,128,0.8)",
+              data: []
+            }, {
+              label: 'is cured',
+              yAxisID: 'A',
+              backgroundColor: "rgba(0,255,0,0.5)",
+              data: []
+            }, {
+              label: 'total (%)',
+              yAxisID: 'B',
+              backgroundColor: "rgba(255,255,255,0.0)",
+              data: []
+            }]
+          },
+          options: {
+            scales: {
+              yAxes: [{
+                id: 'A',
+                position: 'left',
+                ticks: {
+                  beginAtZero: true
+                },
+                scaleLabel:{
+                  display: true,
+                  labelString: '# Individuals'
                 }
+              }, {
+                id: 'B',
+                position: 'right',
+                ticks: {
+                  beginAtZero: true
+                },
+                scaleLabel:{
+                  display: true,
+                  labelString: '% total infected'
+                }
+              }]
             }
-          };
-          total=0;
-          for(i=0; i<data.length; i++){
-            chartOptions.data.labels.push(i);
-            chartOptions.data.datasets[0].data.push(data[i].infected);
-            chartOptions.data.datasets[1].data.push(data[i].infectious);
-            chartOptions.data.datasets[2].data.push(data[i].symptom);
-            chartOptions.data.datasets[3].data.push(data[i].heavysymptom);
-            chartOptions.data.datasets[4].data.push(data[i].cured);
-            total += data[i].infected;
-            chartOptions.data.datasets[5].data.push(total/(options.xsize * options.ysize)*100);
           }
-          console.dir(chartOptions);
-          $('#calculating').removeClass('spinner');
-          if(myChart){
-            myChart.destroy();
-            myChart = null;
-          }
+        };
 
+        total = 0;
+        for (i = 0; i < status.length; i++) {
+          chartOptions.data.labels.push(i);
+          chartOptions.data.datasets[0].data.push(status[i].infected);
+          chartOptions.data.datasets[1].data.push(status[i].infectious);
+          chartOptions.data.datasets[2].data.push(status[i].symptom);
+          chartOptions.data.datasets[3].data.push(status[i].heavysymptom);
+          chartOptions.data.datasets[4].data.push(status[i].cured);
+          total += status[i].infected;
+          chartOptions.data.datasets[5].data.push(total / (options.xsize * options.ysize) * 100);
+        }
+
+        //        console.dir(chartOptions);
+        $('#calculating').removeClass('spinner');
+        /*
+                if (myChart) {
+                  myChart.destroy();
+                  myChart = null;
+                }
+        
+                myChart = new Chart($('#mychart'), chartOptions);
+        */
+        if (!myChart) {
           myChart = new Chart($('#mychart'), chartOptions);
-          $("#calc").button( "enable" );
-          }, 100);
-          event.preventDefault();
+        }
+        myChart.data = chartOptions.data;
+        myChart.update({duration: 0});
+      }
+
+      // draw the heatmap baset on buckets (width always 100, height adjusted)
+      drawHeatmap = function (instance, options, country) {
+        //        console.dir(country);
+        let heatmap = [];
+        let xSize = 100;
+        let scale = xSize / country.xsize;
+        let ySize = country.ysize * scale;
+        for (let x = 0; x < xSize; x++) {
+          heatmap.push([]);
+          for (let y = 0; y < ySize; y++) {
+            heatmap[x].push(0);
+          }
+        }
+
+        for (let x = 0; x < country.xsize; x++) {
+          for (let y = 0; y < country.ysize; y++) {
+            if (country.country[x][y].infected) {
+              heatmap[Math.trunc(x * scale)][Math.trunc(y * scale)]++;
+            }
+          }
+        }
+
+        let maxValue = 0;
+        let heatmapData = [];
+        for (let x = 0; x < xSize; x++) {
+          for (let y = 0; y < ySize; y++) {
+            if (heatmap[x][y]) {
+              heatmapData.push({
+                x: 4 + 8 * x,
+                y: 4 + 8 * y,
+                value: heatmap[x][y]
+              });
+              maxValue = Math.max(maxValue, heatmap[x][y]);
+            }
+          }
+        }
+
+        let xData = [];
+        let yData = [];
+        for (let x = 0; x < country.xsize; x++) {
+          xData.push(x);
+        }
+        for (let y = 0; y < country.ysize; y++) {
+          yData.push(y);
+        }
+
+        //        console.dir(heatmapData);
+        instance.setData({
+          min: 0,
+          max: maxValue,
+          data: heatmapData
         });
+      }
+
+      let myChart = null;
+
+      $("#xsize").spinner({ min: 100, max: 10000, step: 100 });
+      $("#ysize").spinner({ min: 100, max: 10000, step: 100 });
+      $("#period").spinner({ min: 10, max: 360, step: 10 });
+      $("#initiallyinfected").spinner({ min: 1, max: 300, step: 1 });
+      $("#resistant").spinner({ min: 0, max: 100, step: 1 });
+      $("#distance").spinner({ min: 0, max: 1000, step: 1 });
+      $("#contacts").spinner({ min: 0, max: 1000, step: 1 });
+      $("#infectionrate").spinner({ min: 0, max: 1000, step: 1 });
+      $("#waitdays").spinner({ min: 0, max: 1000, step: 1 });
+      $("#infectiousdays").spinner({ min: 1, max: 100, step: 1 });
+      $("#symptomdays").spinner({ min: 0, max: 100, step: 1 });
+      $("#heavysymptoms").spinner({ min: 0, max: 100, step: 1 });
+      $("#nosymptoms").spinner({ min: 0, max: 100, step: 1 });
+
+      $("#calc").button();
+      $("#calc").click(function (event) {
+        $("#calc").button("disable");
+        $('#calculating').addClass('spinner');
+        let options = {
+          xsize: parseInt($('#xsize').val()),
+          ysize: parseInt($('#ysize').val()),
+          period: parseInt($('#period').val()),
+          initiallyinfected: parseInt($('#initiallyinfected').val()),
+          resistant: parseInt($('#resistant').val()),
+          distance: parseInt($('#distance').val()),
+          contacts: parseInt($('#contacts').val()),
+          infectionrate: parseInt($('#infectionrate').val()),
+          waitdays: parseInt($('#waitdays').val()),
+          infectiousdays: parseInt($('#infectiousdays').val()),
+          symptomdays: parseInt($('#symptomdays').val()),
+          heavysymptoms: parseInt($('#heavysymptoms').val()),
+          nosymptoms: parseInt($('#nosymptoms').val()),
+        }
+
+        // adjust the heatmap size to simultion sizes
+        let width = $('#heatmap').width();
+        let height = width / options.xsize * options.ysize;
+
+        console.log('Size', width, height);
+        $('#heatmap').height(height);
+        $('#heatmap').html('');
+        let heatmapInstance = h337.create({
+          container: document.querySelector('#heatmap')
+        });
+
+
+        let simulation = new Simulation(options);
+        simulation.init();
+
+        drawDay = function () {
+          let rawData = simulation.getData();
+          if (rawData) {
+            //              console.dir(rawData);
+            drawHeatmap(heatmapInstance, options, rawData.country);
+            drawTotal(options, rawData.status);
+            simulation.nextDay();
+            if (simulation.today < simulation.period) {
+              setTimeout(drawDay, 300);
+            } else {
+              $("#calc").button("enable");
+            }
+          }
+        }
+
+        setTimeout(drawDay, 100);
+        event.preventDefault();
       });
-    </script>
-  </body>
+    });
+  </script>
+</body>
+
 </html>
