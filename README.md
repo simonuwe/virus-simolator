@@ -10,11 +10,12 @@ Some assumptions:
 - individuals which show symptoms behave rational and will not infect other individuals
 - The durations of the infections are average durations and are the same for all individuals.
 
+![Virus Simulator](images/virussimulator.png)
 
 ## start
 Copy this repository into a local directory
 
-In your browser - chrome and firefox should work fine - open file 
+In your browser - recent version of Chrome and Firefox should work fine - open file 
 ```
     index.html
 ```

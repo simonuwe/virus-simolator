@@ -123,8 +123,8 @@
     </div>
     <button id="calc">Calc</button>
     <div id="calculating"></div>
-    <div>
-      <canvas id="mychart" width="800" height="600" style="border:1px solid #d3d3d3;"></canvas>
+    <div style="width: 1000px; height: 700px">
+      <canvas id="totalchart" style="border:1px solid #d3d3d3;"></canvas>
     </div>
   </div>
   <div id="heatmap"
@@ -135,7 +135,7 @@
     $(function () {
 
       // draw the total overview diagram
-      drawTotal = function (options, status) {
+      drawTotal = function (chart, options, status) {
         //        console.dir(status);
         let chartOptions = {
           responsive: true,
@@ -183,7 +183,7 @@
                 ticks: {
                   beginAtZero: true
                 },
-                scaleLabel:{
+                scaleLabel: {
                   display: true,
                   labelString: '# Individuals'
                 }
@@ -193,7 +193,7 @@
                 ticks: {
                   beginAtZero: true
                 },
-                scaleLabel:{
+                scaleLabel: {
                   display: true,
                   labelString: '% total infected'
                 }
@@ -215,24 +215,12 @@
         }
 
         //        console.dir(chartOptions);
-        $('#calculating').removeClass('spinner');
-        /*
-                if (myChart) {
-                  myChart.destroy();
-                  myChart = null;
-                }
-        
-                myChart = new Chart($('#mychart'), chartOptions);
-        */
-        if (!myChart) {
-          myChart = new Chart($('#mychart'), chartOptions);
-        }
-        myChart.data = chartOptions.data;
-        myChart.update({duration: 0});
+        chart.data = chartOptions.data;
+        chart.update({ duration: 0 });
       }
 
       // draw the heatmap baset on buckets (width always 100, height adjusted)
-      drawHeatmap = function (instance, options, country) {
+      drawHeatmap = function (chart, options, country) {
         //        console.dir(country);
         let heatmap = [];
         let xSize = 100;
@@ -278,14 +266,12 @@
         }
 
         //        console.dir(heatmapData);
-        instance.setData({
+        chart.setData({
           min: 0,
           max: maxValue,
           data: heatmapData
         });
       }
-
-      let myChart = null;
 
       $("#xsize").spinner({ min: 100, max: 10000, step: 100 });
       $("#ysize").spinner({ min: 100, max: 10000, step: 100 });
@@ -332,6 +318,70 @@
           container: document.querySelector('#heatmap')
         });
 
+        let totalChart = new Chart($('#totalchart'), {
+          responsive: true,
+          maintainAspectRatio: false,
+          type: 'line',
+          data: {
+            labels: [],
+            datasets: [{
+              label: 'newly infected',
+              yAxisID: 'A',
+              backgroundColor: "rgba(255,0,0,0.5)",
+              data: []
+            }, {
+              label: 'is infectious',
+              yAxisID: 'A',
+              backgroundColor: "rgba(255,255,0,0.5)",
+              data: []
+            }, {
+              label: 'has symptom',
+              yAxisID: 'A',
+              backgroundColor: "rgba(128,128,128,0.5)",
+              data: []
+            }, {
+              label: 'has heavy symptom',
+              yAxisID: 'A',
+              backgroundColor: "rgba(128,128,128,0.8)",
+              data: []
+            }, {
+              label: 'is cured',
+              yAxisID: 'A',
+              backgroundColor: "rgba(0,255,0,0.5)",
+              data: []
+            }, {
+              label: 'total (%)',
+              yAxisID: 'B',
+              backgroundColor: "rgba(255,255,255,0.0)",
+              data: []
+            }]
+          },
+          options: {
+            scales: {
+              yAxes: [{
+                id: 'A',
+                position: 'left',
+                ticks: {
+                  beginAtZero: true
+                },
+                scaleLabel: {
+                  display: true,
+                  labelString: '# Individuals'
+                }
+              }, {
+                id: 'B',
+                position: 'right',
+                ticks: {
+                  beginAtZero: true
+                },
+                scaleLabel: {
+                  display: true,
+                  labelString: '% total infected'
+                }
+              }]
+            }
+          }
+        });
 
         let simulation = new Simulation(options);
         simulation.init();
@@ -341,11 +391,12 @@
           if (rawData) {
             //              console.dir(rawData);
             drawHeatmap(heatmapInstance, options, rawData.country);
-            drawTotal(options, rawData.status);
+            drawTotal(totalChart, options, rawData.status);
             simulation.nextDay();
             if (simulation.today < simulation.period) {
               setTimeout(drawDay, 300);
             } else {
+              $('#calculating').removeClass('spinner');
               $("#calc").button("enable");
             }
           }
