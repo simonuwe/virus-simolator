@@ -121,15 +121,19 @@
         </tr>
       </table>
     </div>
-    <button id="button_start" class="ui-button ui-widget ui-corner-all ui-button-icon-only">
+    <button id="button_start" class="ui-button ui-widget ui-corner-all ui-button-icon-only" title="start simulation">
       <span class="ui-icon ui-icon-play"></span></button>
-    <button id="button_pause" class="ui-button ui-widget ui-corner-all ui-button-icon-only">
+    <button id="button_pause" class="ui-button ui-widget ui-corner-all ui-button-icon-only" title="pause simulation">
       <span class="ui-icon ui-icon-pause"></span></button>
-    <button id="button_stop" class="ui-button ui-widget ui-corner-all ui-button-icon-only">
+    <button id="button_stop" class="ui-button ui-widget ui-corner-all ui-button-icon-only" title="stop simulation">
       <span class="ui-icon ui-icon-stop"></span></button>
-    <button id="button_seek" class="ui-button ui-widget ui-corner-all ui-button-icon-only">
+    <button id="button_seek" class="ui-button ui-widget ui-corner-all ui-button-icon-only" title="simulate next day">
       <span class="ui-icon ui-icon-seek-next"></span></button>
-
+    <div>
+      <br />
+      Population: <span id="population"></span> Day: <span id="day"></span>
+      <br />
+    </div>
     <div id="calculating"></div>
     <div style="width: 1000px; height: 700px">
       <canvas id="totalchart" style="border:1px solid #d3d3d3;"></canvas>
@@ -142,11 +146,16 @@
   <script>
     "use strict";
     $(function () {
+      $(document).click(function () {
+        $('.ui-tooltip').remove();
+      });
+
       let playMode = 0;
+      $(document).tooltip();
 
       // draw the total overview diagram
       let drawTotal = function (chart, options, status) {
-        //        console.dir(status);
+        // console.dir(status);
         let chartOptions = {
           responsive: true,
           maintainAspectRatio: false,
@@ -214,17 +223,20 @@
 
         let total = 0;
         for (let i = 0; i < status.length; i++) {
+          let entry = status[i];
+          // console.log(i, entry.infected, JSON.stringify(entry));
           chartOptions.data.labels.push(i);
-          chartOptions.data.datasets[0].data.push(status[i].infected);
-          chartOptions.data.datasets[1].data.push(status[i].infectious);
-          chartOptions.data.datasets[2].data.push(status[i].symptom);
-          chartOptions.data.datasets[3].data.push(status[i].heavysymptom);
-          chartOptions.data.datasets[4].data.push(status[i].cured);
-          total += status[i].infected;
+          chartOptions.data.datasets[0].data.push(entry.infected);
+          chartOptions.data.datasets[1].data.push(entry.infectious);
+          chartOptions.data.datasets[2].data.push(entry.symptom);
+          chartOptions.data.datasets[3].data.push(entry.heavysymptom);
+          chartOptions.data.datasets[4].data.push(entry.cured);
+          total += entry.infected;
           chartOptions.data.datasets[5].data.push(total / (options.xsize * options.ysize) * 100);
         }
 
-        //        console.dir(chartOptions);
+        // console.dir(chartOptions);
+        // console.dir(status);
         chart.data = chartOptions.data;
         chart.update({ duration: 0 });
       }
@@ -340,11 +352,11 @@
       let drawDay = function () {
         let rawData = simulation.getData();
         if (rawData) {
-          //              console.dir(rawData);
+          //console.dir(rawData);
           drawHeatmap(heatmapInstance, options, rawData.country);
           drawTotal(totalChart, options, rawData.status);
-
-          if (simulation.nextDay() && simulation.today < simulation.period) {
+          $('#day').html(rawData.day);
+          if (simulation.nextDay() && simulation.today <= simulation.period) {
             if (playMode == 1) {
               setTimeout(drawDay, 300);
             } else {
@@ -386,6 +398,7 @@
           heavysymptoms: parseInt($('#heavysymptoms').val()),
           nosymptoms: parseInt($('#nosymptoms').val()),
         }
+        $('#population').html(options.xsize * options.ysize);
 
         // adjust the heatmap size to simultion sizes
         let width = $('#heatmap').width();
