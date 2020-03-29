@@ -121,7 +121,15 @@
         </tr>
       </table>
     </div>
-    <button id="calc">Calc</button>
+    <button id="button_start" class="ui-button ui-widget ui-corner-all ui-button-icon-only">
+      <span class="ui-icon ui-icon-play"></span></button>
+    <button id="button_pause" class="ui-button ui-widget ui-corner-all ui-button-icon-only">
+      <span class="ui-icon ui-icon-pause"></span></button>
+    <button id="button_stop" class="ui-button ui-widget ui-corner-all ui-button-icon-only">
+      <span class="ui-icon ui-icon-stop"></span></button>
+    <button id="button_seek" class="ui-button ui-widget ui-corner-all ui-button-icon-only">
+      <span class="ui-icon ui-icon-seek-next"></span></button>
+
     <div id="calculating"></div>
     <div style="width: 1000px; height: 700px">
       <canvas id="totalchart" style="border:1px solid #d3d3d3;"></canvas>
@@ -132,10 +140,12 @@
 
 
   <script>
+    "use strict";
     $(function () {
+      let playMode = 0;
 
       // draw the total overview diagram
-      drawTotal = function (chart, options, status) {
+      let drawTotal = function (chart, options, status) {
         //        console.dir(status);
         let chartOptions = {
           responsive: true,
@@ -202,8 +212,8 @@
           }
         };
 
-        total = 0;
-        for (i = 0; i < status.length; i++) {
+        let total = 0;
+        for (let i = 0; i < status.length; i++) {
           chartOptions.data.labels.push(i);
           chartOptions.data.datasets[0].data.push(status[i].infected);
           chartOptions.data.datasets[1].data.push(status[i].infectious);
@@ -220,7 +230,7 @@
       }
 
       // draw the heatmap baset on buckets (width always 100, height adjusted)
-      drawHeatmap = function (chart, options, country) {
+      let drawHeatmap = function (chart, options, country) {
         //        console.dir(country);
         let heatmap = [];
         let xSize = 100;
@@ -287,11 +297,81 @@
       $("#heavysymptoms").spinner({ min: 0, max: 100, step: 1 });
       $("#nosymptoms").spinner({ min: 0, max: 100, step: 1 });
 
-      $("#calc").button();
-      $("#calc").click(function (event) {
-        $("#calc").button("disable");
+      $('#button_start').button();
+      $('#button_pause').button().button('disable');
+      $('#button_stop').button().button('disable');
+      $('#button_seek').button().button('disable');
+
+      $('#button_stop').click(function (event) {
+        $('#button_start').button('enable');
+        $('#button_pause').button('disable');
+        $('#button_stop').button('disable');
+        $('#button_seek').button('disable');
+        playMode = 0;
+      });
+
+      $('#button_seek').click(function (event) {
+        $('#button_start').button('enable');
+        $('#button_pause').button('disable');
+        $('#button_stop').button('disable');
+        $('#button_seek').button('disable');
+        playMode = 2;
+        setTimeout(drawDay, 100);
+      });
+
+      $('#button_pause').click(function (event) {
+        $('#button_start').button('enable');
+        $('#button_pause').button('enable');
+        $('#button_stop').button('enable');
+        $('#button_seek').button('enable');
+        if (playMode == 1) {
+          playMode = 3;
+        } else {
+          setTimeout(drawDay, 100);
+          playMode = 1;
+        }
+      });
+
+      let options = {};
+      let simulation = null;
+      let heatmapInstance = null;
+      let totalChart = null;
+
+      let drawDay = function () {
+        let rawData = simulation.getData();
+        if (rawData) {
+          //              console.dir(rawData);
+          drawHeatmap(heatmapInstance, options, rawData.country);
+          drawTotal(totalChart, options, rawData.status);
+
+          if (simulation.nextDay() && simulation.today < simulation.period) {
+            if (playMode == 1) {
+              setTimeout(drawDay, 300);
+            } else {
+              $('#calculating').removeClass('spinner');
+              $('#button_start').button('enable');
+              $('#button_pause').button('enable');
+              $('#button_seek').button('enable');
+            }
+          } else {
+            $('#calculating').removeClass('spinner');
+            $('#button_start').button('enable');
+            $('#button_pause').button('disable');
+            $('#button_seek').button('disable');
+            $('#button_stop').button('disable');
+
+          }
+        }
+      }
+
+      $('#button_start').click(function (event) {
+        $('#button_start').button('disable');
+        $('#button_pause').button('enable');
+        $('#button_stop').button('enable');
+        $('#button_seek').button('disable');
+        playMode = 1;
         $('#calculating').addClass('spinner');
-        let options = {
+        options = {
           xsize: parseInt($('#xsize').val()),
           ysize: parseInt($('#ysize').val()),
           period: parseInt($('#period').val()),
@@ -314,11 +394,11 @@
         console.log('Size', width, height);
         $('#heatmap').height(height);
         $('#heatmap').html('');
-        let heatmapInstance = h337.create({
+        heatmapInstance = h337.create({
           container: document.querySelector('#heatmap')
         });
 
-        let totalChart = new Chart($('#totalchart'), {
+        totalChart = new Chart($('#totalchart'), {
           responsive: true,
           maintainAspectRatio: false,
           type: 'line',
@@ -383,24 +463,8 @@
           }
         });
 
-        let simulation = new Simulation(options);
+        simulation = new Simulation(options);
         simulation.init();
-
-        drawDay = function () {
-          let rawData = simulation.getData();
-          if (rawData) {
-            //              console.dir(rawData);
-            drawHeatmap(heatmapInstance, options, rawData.country);
-            drawTotal(totalChart, options, rawData.status);
-            simulation.nextDay();
-            if (simulation.today < simulation.period) {
-              setTimeout(drawDay, 300);
-            } else {
-              $('#calculating').removeClass('spinner');
-              $("#calc").button("enable");
-            }
-          }
-        }
 
         setTimeout(drawDay, 100);
         event.preventDefault();

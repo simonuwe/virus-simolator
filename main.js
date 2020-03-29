@@ -1,5 +1,3 @@
-#!/usr/bin/nodejs
-
 "use strict";
 
 let gDebug = 0;
@@ -260,5 +258,6 @@ class Simulation{
     this.today ++;
     let infections = this.country.calcInfections(this.today, this.disease);
     if(gDebug) {console.dir(infections);}
+    return(infections.length>0);
   }
 }
