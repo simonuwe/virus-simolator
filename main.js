@@ -12,6 +12,9 @@ class Disease {
     this.heavysymptomrate = heavysymptomrate;
     //    console.dir(this);
   }
+  changeParameters(infectionrate){
+    this.infectionrate = infectionrate;
+  }
 }
 
 class Person {
@@ -123,6 +126,12 @@ class Country {
       }
     }
   }
+
+  changeParameters(distance, contacts) {
+    this.distance = distance;
+    this.contacts = contacts;
+  }
+
 
   setInfected(day, infected) {
     this.infected = infected;
@@ -247,6 +256,15 @@ class Simulation {
 
     this.country.setInfected(this.today, this.infected);
   }
+
+  changeParameters(distance, contacts, infectionrate) {
+    this.options.distance = distance;
+    this.options.contacts = contacts;
+    this.options.infectionrate = infectionrate
+    this.country.changeParameters(distance, contacts);
+    this.disease.changeParameters(infectionrate / 100.0);
+  }
+
 
   getData() {
     if (this.today < this.country.status.length) {

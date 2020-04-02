@@ -10,6 +10,11 @@
   <script src="main.js"></script>
   <link rel="stylesheet" type="text/css" href="jquery-ui.min.css">
   <style>
+    .disableinput {
+      pointer-events: none;
+      background-color: lightgray;
+    }
+
     .ui-spinner {
       width: 5em;
     }
@@ -48,6 +53,7 @@
   <div style="vertical-align:top; display: inline-block;">
     <div>
       <table>
+        </tbody>
         <tr class="chapter">
           <td>Global setup</td>
           <td />
@@ -89,6 +95,8 @@
           <td><input id="nosymptoms" value="0"></input></td>
           <td><label for="heavysymptoms">Heavy symptoms (%)</label></td>
           <td><input id="heavysymptoms" value="0"></input></td>
+          <td></td>
+          <td></td>
         </tr>
         <tr>
           <td />
@@ -98,6 +106,8 @@
           <td><input id="infectiousdays" value="10"></input></td>
           <td><label for="symptomdays">Days symptoms</label></td>
           <td><input id="symptomdays" value="10"></input></td>
+          <td></td>
+          <td></td>
         </tr>
         <tr class="chapter">
           <td>Personal behaviour</td>
@@ -110,15 +120,20 @@
           <td />
           <td />
         </tr>
-        <tr>
-          <td />
-          <td><label for="distance">Moving distance</label></td>
-          <td><input id="distance" value="30"></input></td>
-          <td><label for="contacts">Daily contacts</label></td>
-          <td><input id="contacts" value="30"></input></td>
-          <td><label for="infectionrate">Infection rate (%)</label></td>
-          <td><input id="infectionrate" value="1"></input></td>
-        </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td />
+            <td><label for="distance">Moving distance</label></td>
+            <td><input id="distance" value="30"></input></td>
+            <td><label for="contacts">Daily contacts</label></td>
+            <td><input id="contacts" value="30"></input></td>
+            <td><label for="infectionrate">Infection rate (%)</label></td>
+            <td><input id="infectionrate" value="1"></input></td>
+            <td></td>
+            <td></td>
+          </tr>
+        </tfoot>
       </table>
     </div>
     <button id="button_start" class="ui-button ui-widget ui-corner-all ui-button-icon-only" title="start simulation">
@@ -135,12 +150,16 @@
       <br />
     </div>
     <div id="calculating"></div>
-    <div style="width: 1000px; height: 700px">
+    <div style="width: 1000px; height: 500px">
       <canvas id="totalchart" style="border:1px solid #d3d3d3;"></canvas>
     </div>
   </div>
   <div id="heatmap"
-    style="vertical-align:top; display: inline-block; width: 800px; height: 800px; border:1px solid #d3d3d3;"></div>
+    style="vertical-align:top; display: inline-block; width: 800px; height: 800px; border:1px solid #d3d3d3;">
+  </div>
+  <div style="width: 1000px; height: 500px">
+    <canvas id="histogramchart" style="border:1px solid #d3d3d3;"></canvas>
+  </div>
 
 
   <script>
@@ -153,96 +172,93 @@
       let playMode = 0;
       $(document).tooltip();
 
+      // draw the histogram diagram
+      function drawHistogram(chart, buckets) {
+        let histogram = [];
+        for (let i = 0; i <= Math.pow(options.xsize / 100, 2); i++) {
+          histogram.push(0);
+        }
+
+        // console.dir(buckets);
+        for (let x = 0; x < buckets.length; x++) {
+          // console.dir(row);
+          for (let y = 0; y < buckets[x].length; y++) {
+            //if (buckets[x][y] > 0) {
+            // console.log(x,y,buckets[x][y]);
+            histogram[buckets[x][y]]++;
+            //}
+          }
+        }
+        // console.dir(histogram);
+
+        chart.data.labels=[];;
+        for (let i = 0; i <= Math.pow(options.xsize / 100, 2); i++) {
+          chart.data.labels.push(i);
+        }
+
+
+        chart.data.datasets[0].data = histogram;
+        // console.dir(chart);
+        chart.update({ duration: 0 });
+
+      }
+
       // draw the total overview diagram
       let drawTotal = function (chart, options, status) {
         // console.dir(status);
-        let chartOptions = {
-          responsive: true,
-          maintainAspectRatio: false,
-          type: 'line',
-          data: {
-            labels: [],
-            datasets: [{
-              label: 'newly infected',
-              yAxisID: 'A',
-              backgroundColor: "rgba(255,0,0,0.5)",
-              data: []
-            }, {
-              label: 'is infectious',
-              yAxisID: 'A',
-              backgroundColor: "rgba(255,255,0,0.5)",
-              data: []
-            }, {
-              label: 'has symptom',
-              yAxisID: 'A',
-              backgroundColor: "rgba(128,128,128,0.5)",
-              data: []
-            }, {
-              label: 'has heavy symptom',
-              yAxisID: 'A',
-              backgroundColor: "rgba(128,128,128,0.8)",
-              data: []
-            }, {
-              label: 'is cured',
-              yAxisID: 'A',
-              backgroundColor: "rgba(0,255,0,0.5)",
-              data: []
-            }, {
-              label: 'total (%)',
-              yAxisID: 'B',
-              backgroundColor: "rgba(255,255,255,0.0)",
-              data: []
-            }]
-          },
-          options: {
-            scales: {
-              yAxes: [{
-                id: 'A',
-                position: 'left',
-                ticks: {
-                  beginAtZero: true
-                },
-                scaleLabel: {
-                  display: true,
-                  labelString: '# Individuals'
-                }
-              }, {
-                id: 'B',
-                position: 'right',
-                ticks: {
-                  beginAtZero: true
-                },
-                scaleLabel: {
-                  display: true,
-                  labelString: '% total infected'
-                }
-              }]
-            }
-          }
-        };
-
         let total = 0;
+        chart.data.labels = [];
+        chart.data.datasets[0].data = [];
+        chart.data.datasets[1].data = [];
+        chart.data.datasets[2].data = [];
+        chart.data.datasets[3].data = [];
+        chart.data.datasets[4].data = [];
+        chart.data.datasets[5].data = [];
         for (let i = 0; i < status.length; i++) {
           let entry = status[i];
           // console.log(i, entry.infected, JSON.stringify(entry));
-          chartOptions.data.labels.push(i);
-          chartOptions.data.datasets[0].data.push(entry.infected);
-          chartOptions.data.datasets[1].data.push(entry.infectious);
-          chartOptions.data.datasets[2].data.push(entry.symptom);
-          chartOptions.data.datasets[3].data.push(entry.heavysymptom);
-          chartOptions.data.datasets[4].data.push(entry.cured);
+          chart.data.labels.push(i);
+          chart.data.datasets[0].data.push(entry.infected);
+          chart.data.datasets[1].data.push(entry.infectious);
+          chart.data.datasets[2].data.push(entry.symptom);
+          chart.data.datasets[3].data.push(entry.heavysymptom);
+          chart.data.datasets[4].data.push(entry.cured);
           total += entry.infected;
-          chartOptions.data.datasets[5].data.push(total / (options.xsize * options.ysize) * 100);
+          chart.data.datasets[5].data.push(total / (options.xsize * options.ysize) * 100);
         }
 
         // console.dir(chartOptions);
         // console.dir(status);
-        chart.data = chartOptions.data;
+        //chart.data = chartOptions.data;
         chart.update({ duration: 0 });
       }
 
-      // draw the heatmap baset on buckets (width always 100, height adjusted)
-      let drawHeatmap = function (chart, options, country) {
+      // calc buckets
+      function calcBuckets(options, country) {
+        let buckets = [];
+        let xSize = 100;
+        let scale = xSize / country.xsize;
+        let ySize = country.ysize * scale;
+        for (let x = 0; x < xSize; x++) {
+          buckets.push([]);
+          for (let y = 0; y < ySize; y++) {
+            buckets[x].push(0);
+          }
+        }
+
+        for (let x = 0; x < country.xsize; x++) {
+          for (let y = 0; y < country.ysize; y++) {
+            if (country.country[x][y].infected) {
+              buckets[Math.trunc(x * scale)][Math.trunc(y * scale)]++;
+            }
+          }
+        }
+
+        return (buckets);
+      };
+
+      // draw the heatmap based on backets (width always 100, height adjusted)
+      function drawHeatmap(chart, options, country) {
         //        console.dir(country);
         let heatmap = [];
         let xSize = 100;
@@ -264,6 +280,8 @@
         }
 
         let maxValue = 0;
+        let minValue = 1000000000;
+
         let heatmapData = [];
         for (let x = 0; x < xSize; x++) {
           for (let y = 0; y < ySize; y++) {
@@ -273,7 +291,10 @@
                 y: 4 + 8 * y,
                 value: heatmap[x][y]
               });
+              minValue = Math.min(minValue, heatmap[x][y]);
               maxValue = Math.max(maxValue, heatmap[x][y]);
+            } else {
+              minValue = 0;
             }
           }
         }
@@ -287,12 +308,26 @@
           yData.push(y);
         }
 
-        //        console.dir(heatmapData);
+        // console.log('min/max', minValue, maxValue);
+        // console.dir(heatmapData);
         chart.setData({
-          min: 0,
+          min: minValue,
           max: maxValue,
           data: heatmapData
         });
+      }
+
+      let options = {};
+      let simulation = null;
+      let heatmapInstance = null;
+      let totalChart = null;
+      let histogramChart = null;
+
+      let changeParameters = function () {
+        simulation.changeParameters(
+          parseInt($('#distance').val()),
+          parseInt($('#contacts').val()),
+          parseInt($('#infectionrate').val()));
       }
 
       $("#xsize").spinner({ min: 100, max: 10000, step: 100 });
@@ -319,6 +354,8 @@
         $('#button_pause').button('disable');
         $('#button_stop').button('disable');
         $('#button_seek').button('disable');
+        $('tbody').removeClass('disableinput');
+        $('tfoot').removeClass('disableinput');
         playMode = 0;
       });
 
@@ -328,6 +365,8 @@
         $('#button_stop').button('disable');
         $('#button_seek').button('disable');
         playMode = 2;
+        changeParameters();
+        $('tfoot').addClass('disableinput');
         setTimeout(drawDay, 100);
       });
 
@@ -338,23 +377,24 @@
         $('#button_seek').button('enable');
         if (playMode == 1) {
           playMode = 3;
+          $('tfoot').removeClass('disableinput');
         } else {
+          $('tfoot').addClass('disableinput');
+          changeParameters();
           setTimeout(drawDay, 100);
           playMode = 1;
         }
       });
 
-      let options = {};
-      let simulation = null;
-      let heatmapInstance = null;
-      let totalChart = null;
-
       let drawDay = function () {
         let rawData = simulation.getData();
         if (rawData) {
+          let buckets = calcBuckets(options, rawData.country);
           //console.dir(rawData);
           drawHeatmap(heatmapInstance, options, rawData.country);
           drawTotal(totalChart, options, rawData.status);
+          drawHistogram(histogramChart, buckets);
+
           $('#day').html(rawData.day);
           if (simulation.nextDay() && simulation.today <= simulation.period) {
             if (playMode == 1) {
@@ -364,6 +404,7 @@
               $('#button_start').button('enable');
               $('#button_pause').button('enable');
               $('#button_seek').button('enable');
+              $('tfoot').removeClass('disableinput');
             }
           } else {
             $('#calculating').removeClass('spinner');
@@ -371,16 +412,136 @@
             $('#button_pause').button('disable');
             $('#button_seek').button('disable');
             $('#button_stop').button('disable');
-
+            $('tbody').removeClass('disableinput');
+            $('tfoot').removeClass('disableinput');
           }
         }
       }
+
+      histogramChart = new Chart($('#histogramchart'), {
+        responsive: true,
+        maintainAspectRatio: false,
+        type: 'bar',
+        data: {
+          labels: [0, 1],
+          datasets: [{
+            label: '# Buckets',
+            backgroundColor: "rgba(255,0,0,0.5)",
+            data: [],
+          }],
+        },
+        options: {
+          title: {
+            display: true,
+            text: 'Histogram'
+          },
+          scales: {
+            xAxes: [{
+              display: true,
+              scaleLabel: {
+                display: true,
+                labelString: 'Bucketsize (# Inidividuals)'
+              }
+            }],
+            yAxes: [{
+              id: 'A',
+              position: 'left',
+              ticks: {
+                beginAtZero: true
+              },
+              scaleLabel: {
+                display: true,
+                labelString: '# Buckets'
+              }
+            }]
+          }
+        }
+      });
+
+      totalChart = new Chart($('#totalchart'), {
+        responsive: true,
+        maintainAspectRatio: false,
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: 'newly infected',
+            yAxisID: 'A',
+            backgroundColor: "rgba(255,0,0,0.5)",
+            data: []
+          }, {
+            label: 'is infectious',
+            yAxisID: 'A',
+            backgroundColor: "rgba(255,255,0,0.5)",
+            data: []
+          }, {
+            label: 'has symptom',
+            yAxisID: 'A',
+            backgroundColor: "rgba(128,128,128,0.5)",
+            data: []
+          }, {
+            label: 'has heavy symptom',
+            yAxisID: 'A',
+            backgroundColor: "rgba(128,128,128,0.8)",
+            data: []
+          }, {
+            label: 'is cured',
+            yAxisID: 'A',
+            backgroundColor: "rgba(0,255,0,0.5)",
+            data: []
+          }, {
+            label: 'total (%)',
+            yAxisID: 'B',
+            backgroundColor: "rgba(255,255,255,0.0)",
+            data: []
+          }]
+        },
+        options: {
+          title: {
+            display: true,
+            text: 'Total'
+          },
+          scales: {
+            xAxes: [{
+              display: true,
+              scaleLabel: {
+                display: true,
+                labelString: 'Day'
+              }
+            }],
+            yAxes: [{
+              id: 'A',
+              position: 'left',
+              ticks: {
+                beginAtZero: true
+              },
+              scaleLabel: {
+                display: true,
+                labelString: '# Individuals'
+              }
+            }, {
+              id: 'B',
+              position: 'right',
+              ticks: {
+                beginAtZero: true
+              },
+              scaleLabel: {
+                display: true,
+                labelString: '% total infected'
+              }
+            }]
+          }
+        }
+      });
+
 
       $('#button_start').click(function (event) {
         $('#button_start').button('disable');
         $('#button_pause').button('enable');
         $('#button_stop').button('enable');
         $('#button_seek').button('disable');
+        $('tbody').addClass('disableinput');
+        $('tfoot').addClass('disableinput');
         playMode = 1;
         $('#calculating').addClass('spinner');
         options = {
@@ -404,76 +565,11 @@
         let width = $('#heatmap').width();
         let height = width / options.xsize * options.ysize;
 
-        console.log('Size', width, height);
+        // console.log('Size', width, height);
         $('#heatmap').height(height);
         $('#heatmap').html('');
         heatmapInstance = h337.create({
           container: document.querySelector('#heatmap')
-        });
-
-        totalChart = new Chart($('#totalchart'), {
-          responsive: true,
-          maintainAspectRatio: false,
-          type: 'line',
-          data: {
-            labels: [],
-            datasets: [{
-              label: 'newly infected',
-              yAxisID: 'A',
-              backgroundColor: "rgba(255,0,0,0.5)",
-              data: []
-            }, {
-              label: 'is infectious',
-              yAxisID: 'A',
-              backgroundColor: "rgba(255,255,0,0.5)",
-              data: []
-            }, {
-              label: 'has symptom',
-              yAxisID: 'A',
-              backgroundColor: "rgba(128,128,128,0.5)",
-              data: []
-            }, {
-              label: 'has heavy symptom',
-              yAxisID: 'A',
-              backgroundColor: "rgba(128,128,128,0.8)",
-              data: []
-            }, {
-              label: 'is cured',
-              yAxisID: 'A',
-              backgroundColor: "rgba(0,255,0,0.5)",
-              data: []
-            }, {
-              label: 'total (%)',
-              yAxisID: 'B',
-              backgroundColor: "rgba(255,255,255,0.0)",
-              data: []
-            }]
-          },
-          options: {
-            scales: {
-              yAxes: [{
-                id: 'A',
-                position: 'left',
-                ticks: {
-                  beginAtZero: true
-                },
-                scaleLabel: {
-                  display: true,
-                  labelString: '# Individuals'
-                }
-              }, {
-                id: 'B',
-                position: 'right',
-                ticks: {
-                  beginAtZero: true
-                },
-                scaleLabel: {
-                  display: true,
-                  labelString: '% total infected'
-                }
-              }]
-            }
-          }
         });
 
         simulation = new Simulation(options);
