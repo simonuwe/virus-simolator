@@ -126,12 +126,12 @@
             <td />
             <td><label for="distance">Moving distance</label></td>
             <td><input id="distance" value="30"></input></td>
+            <td><label for="farration">Far travel ratio (%)</label></td>
+            <td><input id="farratio" value="0"></input></td>
             <td><label for="contacts">Daily contacts</label></td>
             <td><input id="contacts" value="30"></input></td>
             <td><label for="infectionrate">Infection rate (%)</label></td>
             <td><input id="infectionrate" value="1"></input></td>
-            <td></td>
-            <td></td>
           </tr>
         </tfoot>
       </table>
@@ -155,7 +155,7 @@
     </div>
   </div>
   <div id="heatmap"
-    style="vertical-align:top; display: inline-block; width: 800px; height: 800px; border:1px solid #d3d3d3;">
+    style="vertical-align:top; display: inline-block; width: 750px; height: 750px; border:1px solid #d3d3d3;">
   </div>
   <div style="width: 1000px; height: 500px">
     <canvas id="histogramchart" style="border:1px solid #d3d3d3;"></canvas>
@@ -170,12 +170,13 @@
       });
 
       let playMode = 0;
+      let heatmapWidth = 100;
       $(document).tooltip();
 
       // draw the histogram diagram
       function drawHistogram(chart, buckets) {
         let histogram = [];
-        for (let i = 0; i <= Math.pow(options.xsize / 100, 2); i++) {
+        for (let i = 0; i <= Math.pow(options.xsize / heatmapWidth, 2); i++) {
           histogram.push(0);
         }
 
@@ -192,7 +193,7 @@
         // console.dir(histogram);
 
         chart.data.labels=[];;
-        for (let i = 0; i <= Math.pow(options.xsize / 100, 2); i++) {
+        for (let i = 0; i <= Math.pow(options.xsize / heatmapWidth, 2); i++) {
           chart.data.labels.push(i);
         }
 
@@ -233,35 +234,11 @@
         chart.update({ duration: 0 });
       }
 
-      // calc buckets
-      function calcBuckets(options, country) {
-        let buckets = [];
-        let xSize = 100;
-        let scale = xSize / country.xsize;
-        let ySize = country.ysize * scale;
-        for (let x = 0; x < xSize; x++) {
-          buckets.push([]);
-          for (let y = 0; y < ySize; y++) {
-            buckets[x].push(0);
-          }
-        }
-
-        for (let x = 0; x < country.xsize; x++) {
-          for (let y = 0; y < country.ysize; y++) {
-            if (country.country[x][y].infected) {
-              buckets[Math.trunc(x * scale)][Math.trunc(y * scale)]++;
-            }
-          }
-        }
-
-        return (buckets);
-      };
-
       // draw the heatmap based on backets (width always 100, height adjusted)
       function drawHeatmap(chart, options, country) {
         //        console.dir(country);
         let heatmap = [];
-        let xSize = 100;
+        let xSize = heatmapWidth;
         let scale = xSize / country.xsize;
         let ySize = country.ysize * scale;
         for (let x = 0; x < xSize; x++) {
@@ -327,7 +304,8 @@
         simulation.changeParameters(
           parseInt($('#distance').val()),
           parseInt($('#contacts').val()),
-          parseInt($('#infectionrate').val()));
+          parseInt($('#infectionrate').val()),
+          parseInt($('#farratio').val()));
       }
 
       $("#xsize").spinner({ min: 100, max: 10000, step: 100 });
@@ -336,6 +314,7 @@
       $("#initiallyinfected").spinner({ min: 1, max: 300, step: 1 });
       $("#resistant").spinner({ min: 0, max: 100, step: 1 });
       $("#distance").spinner({ min: 0, max: 1000, step: 1 });
+      $("#farratio").spinner({min: 0, max:100, step:1});
       $("#contacts").spinner({ min: 0, max: 1000, step: 1 });
       $("#infectionrate").spinner({ min: 0, max: 1000, step: 1 });
       $("#waitdays").spinner({ min: 0, max: 1000, step: 1 });
@@ -367,7 +346,7 @@
         playMode = 2;
         changeParameters();
         $('tfoot').addClass('disableinput');
-        setTimeout(drawDay, 100);
+        setTimeout(drawDay, heatmapWidth);
       });
 
       $('#button_pause').click(function (event) {
@@ -389,7 +368,7 @@
       let drawDay = function () {
         let rawData = simulation.getData();
         if (rawData) {
-          let buckets = calcBuckets(options, rawData.country);
+          let buckets = simulation.calcBuckets(100);
           //console.dir(rawData);
           drawHeatmap(heatmapInstance, options, rawData.country);
           drawTotal(totalChart, options, rawData.status);
@@ -551,6 +530,7 @@
           initiallyinfected: parseInt($('#initiallyinfected').val()),
           resistant: parseInt($('#resistant').val()),
           distance: parseInt($('#distance').val()),
+          farratio: parseInt($('#farratio').val()),
           contacts: parseInt($('#contacts').val()),
           infectionrate: parseInt($('#infectionrate').val()),
           waitdays: parseInt($('#waitdays').val()),

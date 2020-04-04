@@ -12,7 +12,7 @@ class Disease {
     this.heavysymptomrate = heavysymptomrate;
     //    console.dir(this);
   }
-  changeParameters(infectionrate){
+  changeParameters(infectionrate) {
     this.infectionrate = infectionrate;
   }
 }
@@ -97,12 +97,13 @@ class Person {
 
 
 class Country {
-  constructor(xsize, ysize, period, resistantrate, distance, contacts) {
+  constructor(xsize, ysize, period, resistantrate, distance, contacts, farratio) {
     this.xsize = xsize;
     this.ysize = ysize;
     this.period = period;
     this.distance = distance;
     this.contacts = contacts;
+    this.farratio = farratio;
     this.country = [];
     this.infected = [];
     this.status = [];
@@ -127,9 +128,10 @@ class Country {
     }
   }
 
-  changeParameters(distance, contacts) {
+  changeParameters(distance, contacts, farratio) {
     this.distance = distance;
     this.contacts = contacts;
+    this.farratio = farratio;
   }
 
 
@@ -151,8 +153,18 @@ class Country {
       this.status[day].infectious++;
       for (let i = 0; i < this.contacts; i++) {
         if (Math.random() < disease.infectionrate) {
-          let x = person.x + (Math.random() * 2 - 1) * this.distance | 0;
-          let y = person.y + (Math.random() * 2 - 1) * this.distance | 0;
+          let x = person.x;
+          let y = person.y;
+
+          if (Math.random() < this.farratio) {
+            // console.log('FAR', this.farratio);
+            x = x + (Math.random() * 2 - 1) * this.xsize / 2 | 0;
+            y = y + (Math.random() * 2 - 1) * this.ysize / 2 | 0;
+          } else {
+            // console.log('NEAR');
+            x = x + (Math.random() * 2 - 1) * this.distance | 0;
+            y = y + (Math.random() * 2 - 1) * this.distance | 0;
+          }
           if ((x >= 0 && x < this.xsize) && (y >= 0 && y < this.ysize)) {
             //        x = Math.max(Math.min(x, this.xsize-1),0);
             //        y = Math.max(Math.min(y, this.ysize-1),0);
@@ -235,8 +247,7 @@ class Simulation {
     this.period = options.period;
     this.infected = [];
     this.disease = new Disease(options.waitdays, options.infectiousdays, options.symptomdays, options.infectionrate / 100.0, options.nosymptoms / 100.0, options.heavysymptoms / 100.0);
-    this.country = new Country(options.xsize, options.ysize, options.period, options.resistant / 100.0, options.distance, options.contacts);
-
+    this.country = new Country(options.xsize, options.ysize, options.period, options.resistant / 100.0, options.distance, options.contacts, options.farratio / 100.0);
   }
 
 
@@ -257,11 +268,35 @@ class Simulation {
     this.country.setInfected(this.today, this.infected);
   }
 
-  changeParameters(distance, contacts, infectionrate) {
+  calcBuckets(size) {
+    let buckets = [];
+    let xSize = size;
+    let scale = xSize / this.country.xsize;
+    let ySize = this.country.ysize * scale;
+    for (let x = 0; x < xSize; x++) {
+      buckets.push([]);
+      for (let y = 0; y < ySize; y++) {
+        buckets[x].push(0);
+      }
+    }
+
+    for (let x = 0; x < this.country.xsize; x++) {
+      for (let y = 0; y < this.country.ysize; y++) {
+        if (this.country.country[x][y].infected) {
+          buckets[Math.trunc(x * scale)][Math.trunc(y * scale)]++;
+        }
+      }
+    }
+
+    return (buckets);
+  };
+
+
+  changeParameters(distance, contacts, infectionrate, farratio) {
     this.options.distance = distance;
     this.options.contacts = contacts;
     this.options.infectionrate = infectionrate
-    this.country.changeParameters(distance, contacts);
+    this.country.changeParameters(distance, contacts, farratio / 100.0);
     this.disease.changeParameters(infectionrate / 100.0);
   }
 
@@ -279,6 +314,7 @@ class Simulation {
   }
 
   nextDay() {
+    console.dir(this.options);
     this.today++;
     let infections = this.country.calcInfections(this.today, this.disease);
     if (gDebug) {

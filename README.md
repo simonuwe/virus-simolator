@@ -19,7 +19,16 @@ In your browser - recent version of Chrome and Firefox should work fine - open f
 ```
     index.html
 ```
-## Simulations
+
+## Simulation
+
+The simulation will show 3 diagrams
+- Heatmap: The heatmap is based on 100 squares in x direction. Each square repesents x individuals (for example 25 = 5*5 when x-size is configured to 500) and the colors represent the number of infected individuals.
+- Totals: The numbers per day of total infected, the percentage of infected, new infected, cured, ...
+- Histogram: Shows for each count of infected individuals the number of squares 
+
+The simulation can be startet, stopped, paused, continued and can run for a single day. When paused, the simulation can be reconfigured to show effects due to changes in the behaviour of the individuals.
+This could bee reducing the mobility, reducing the number of contacts, reducing the propability to infect others
 
 There are several possibilities to configure the simulator
 
@@ -54,6 +63,7 @@ Configure the personal behaviour of the individuals
 | Field              | Description |
 | ------------------ | ----------- |
 | Moving distance    | The distance individuals move to left/right up/down |
+| Far travel ratio   | The percentage of far travels beyond the moving distance |
 | Daily contacts     | The number of daly contacts |
 | Infection rate (%) | The percentage of individuals infected by a contact to another infected individual. |
 ```
